@@ -49,7 +49,16 @@ export function Navbar() {
           </Show>
 
           <Show when="signed-in">
-            <UserButton />
+            <div className="flex items-center gap-4">
+              <Link
+                href="/my-bookings"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                My Bookings
+              </Link>
+
+              <UserButton />
+            </div>
           </Show>
         </div>
       </div>
