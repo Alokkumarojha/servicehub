@@ -4,7 +4,15 @@ import { prisma } from '@/lib/prisma';
 import { createBooking } from './actions';
 import Link from 'next/link';
 
-export default async function BookingPage() {
+type BookingPageProps = {
+  searchParams: Promise<{
+    serviceId?: string;
+  }>;
+};
+
+export default async function BookingPage({ searchParams }: BookingPageProps) {
+  const { serviceId } = await searchParams;
+
   const user = await getCurrentUser();
 
   const addresses = await prisma.address.findMany({
@@ -19,6 +27,12 @@ export default async function BookingPage() {
   const services = await prisma.service.findMany({
     where: {
       isActive: true,
+
+      ...(serviceId
+        ? {
+            id: serviceId,
+          }
+        : {}),
     },
     include: {
       provider: {
@@ -55,7 +69,7 @@ export default async function BookingPage() {
 
               <select
                 name="serviceId"
-                defaultValue=""
+                defaultValue={serviceId ?? ''}
                 className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="" disabled>

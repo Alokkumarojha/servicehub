@@ -5,26 +5,32 @@ import { Button } from '@/components/ui/button';
 const services = [
   {
     title: 'Electrician',
+    slug: 'electrical',
     description: 'Electrical installation, repair and maintenance services.',
   },
   {
     title: 'Plumber',
+    slug: 'plumbing',
     description: 'Plumbing repair, installation and maintenance services.',
   },
   {
     title: 'AC Repair',
+    slug: 'ac-repair',
     description: 'AC servicing, repair and installation services.',
   },
   {
     title: 'Carpenter',
+    slug: 'carpenter',
     description: 'Furniture repair, installation and carpentry services.',
   },
   {
     title: 'Tutor',
+    slug: 'tutor',
     description: 'Find tutors for different subjects and learning needs.',
   },
   {
     title: 'Cleaning',
+    slug: 'cleaning',
     description: 'Professional home and office cleaning services.',
   },
 ];
@@ -57,7 +63,7 @@ export default function ServicesPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
               <div
-                key={service.title}
+                key={service.slug}
                 className="rounded-xl border p-6 transition-colors hover:bg-muted"
               >
                 <h2 className="text-xl font-semibold">{service.title}</h2>
@@ -69,7 +75,7 @@ export default function ServicesPage() {
                 <Button
                   className="mt-6"
                   nativeButton={false}
-                  render={<Link href="/providers" />}
+                  render={<Link href={`/providers?category=${service.slug}`} />}
                 >
                   Find Providers
                 </Button>

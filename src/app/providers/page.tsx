@@ -1,47 +1,64 @@
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { prisma } from '@/lib/prisma';
 
-const providers = [
-  {
-    name: 'Rahul Kumar',
-    service: 'Electrician',
-    experience: '5 years',
-    location: 'Siwan, Bihar',
-  },
-  {
-    name: 'Amit Sharma',
-    service: 'Plumber',
-    experience: '7 years',
-    location: 'Mairwa, Bihar',
-  },
-  {
-    name: 'Ravi Kumar',
-    service: 'AC Repair',
-    experience: '4 years',
-    location: 'Siwan, Bihar',
-  },
-  {
-    name: 'Sanjay Singh',
-    service: 'Carpenter',
-    experience: '8 years',
-    location: 'Mairwa, Bihar',
-  },
-  {
-    name: 'Priya Singh',
-    service: 'Tutor',
-    experience: '6 years',
-    location: 'Siwan, Bihar',
-  },
-  {
-    name: 'Manoj Kumar',
-    service: 'Cleaning',
-    experience: '3 years',
-    location: 'Mairwa, Bihar',
-  },
-];
+type ProvidersPageProps = {
+  searchParams: Promise<{
+    category?: string;
+  }>;
+};
 
-export default function ProvidersPage() {
+export default async function ProvidersPage({
+  searchParams,
+}: ProvidersPageProps) {
+  const { category } = await searchParams;
+
+  const providers = await prisma.provider.findMany({
+    where: {
+      isVerified: true,
+
+      ...(category
+        ? {
+            services: {
+              some: {
+                isActive: true,
+                category: {
+                  slug: category,
+                },
+              },
+            },
+          }
+        : {}),
+    },
+
+    include: {
+      user: true,
+
+      services: {
+        where: {
+          isActive: true,
+
+          ...(category
+            ? {
+                category: {
+                  slug: category,
+                },
+              }
+            : {}),
+        },
+
+        include: {
+          category: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
   return (
     <main>
       {/* Page Header */}
@@ -69,48 +86,64 @@ export default function ProvidersPage() {
       {/* Provider List */}
       <section>
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {providers.map((provider) => (
-              <div
-                key={provider.name}
-                className="rounded-xl border p-6 transition-colors hover:bg-muted"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted font-semibold">
-                    {provider.name.charAt(0)}
+          {providers.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-12 text-center">
+              <h2 className="text-lg font-semibold">No providers found</h2>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                There are no verified providers available right now.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {providers.map((provider) => {
+                const primaryService = provider.services[0];
+
+                return (
+                  <div
+                    key={provider.id}
+                    className="rounded-xl border p-6 transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted font-semibold">
+                        {provider.user.name.charAt(0)}
+                      </div>
+
+                      <div>
+                        <h2 className="font-semibold">{provider.user.name}</h2>
+
+                        <p className="text-sm text-muted-foreground">
+                          {primaryService?.category.name ?? 'Service Provider'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 space-y-2 text-sm">
+                      <p>
+                        <span className="font-medium">Experience:</span>{' '}
+                        {provider.experience
+                          ? `${provider.experience} years`
+                          : 'Not specified'}
+                      </p>
+
+                      <p>
+                        <span className="font-medium">Services:</span>{' '}
+                        {provider.services.length}
+                      </p>
+                    </div>
+
+                    <Button
+                      className="mt-6 w-full"
+                      nativeButton={false}
+                      render={<Link href={`/providers/${provider.id}`} />}
+                    >
+                      View Profile
+                    </Button>
                   </div>
-
-                  <div>
-                    <h2 className="font-semibold">{provider.name}</h2>
-
-                    <p className="text-sm text-muted-foreground">
-                      {provider.service}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 space-y-2 text-sm">
-                  <p>
-                    <span className="font-medium">Experience:</span>{' '}
-                    {provider.experience}
-                  </p>
-
-                  <p>
-                    <span className="font-medium">Location:</span>{' '}
-                    {provider.location}
-                  </p>
-                </div>
-
-                <Button
-                  className="mt-6 w-full"
-                  nativeButton={false}
-                  render={<Link href="/providers/profile" />}
-                >
-                  View Profile
-                </Button>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </main>

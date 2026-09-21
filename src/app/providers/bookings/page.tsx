@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import { BookingActions } from './booking-actions';
 
 export default async function ProviderBookingsPage() {
   const user = await getCurrentUser();
@@ -115,6 +116,9 @@ export default async function ProviderBookingsPage() {
                     </p>
                   </div>
                 </div>
+                {booking.status === 'PENDING' && (
+                  <BookingActions bookingId={booking.id} />
+                )}
               </div>
             ))}
           </div>
