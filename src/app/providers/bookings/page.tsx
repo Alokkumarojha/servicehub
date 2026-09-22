@@ -1,12 +1,12 @@
+import { redirect } from 'next/navigation';
+
+import { BookingActions } from './booking-actions';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
-import { BookingActions } from './booking-actions';
 
 export default async function ProviderBookingsPage() {
   const user = await getCurrentUser();
 
-  console.log('Current user:', user);
   // Only providers can access this page
   if (user.role !== 'PROVIDER') {
     redirect('/');
@@ -116,8 +116,13 @@ export default async function ProviderBookingsPage() {
                     </p>
                   </div>
                 </div>
-                {booking.status === 'PENDING' && (
-                  <BookingActions bookingId={booking.id} />
+
+                {(booking.status === 'PENDING' ||
+                  booking.status === 'ACCEPTED') && (
+                  <BookingActions
+                    bookingId={booking.id}
+                    status={booking.status}
+                  />
                 )}
               </div>
             ))}

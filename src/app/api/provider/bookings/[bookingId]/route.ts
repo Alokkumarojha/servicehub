@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 
-type BookingAction = 'ACCEPT' | 'REJECT';
+type BookingAction = 'ACCEPT' | 'REJECT' | 'COMPLETE';
 
 export async function PATCH(
   request: Request,
@@ -37,20 +37,30 @@ export async function PATCH(
 
     const action = body.action as BookingAction;
 
-    if (action !== 'ACCEPT' && action !== 'REJECT') {
+    if (action !== 'ACCEPT' && action !== 'REJECT' && action !== 'COMPLETE') {
       return NextResponse.json(
         { error: 'Invalid booking action' },
         { status: 400 }
       );
     }
 
-    const newStatus = action === 'ACCEPT' ? 'ACCEPTED' : 'REJECTED';
+    let newStatus: 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
+
+    if (action === 'ACCEPT') {
+      newStatus = 'ACCEPTED';
+    } else if (action === 'REJECT') {
+      newStatus = 'REJECTED';
+    } else {
+      newStatus = 'COMPLETED';
+    }
+
+    const currentStatus = action === 'COMPLETE' ? 'ACCEPTED' : 'PENDING';
 
     const result = await prisma.booking.updateMany({
       where: {
         id: bookingId,
         providerId: provider.id,
-        status: 'PENDING',
+        status: currentStatus,
       },
       data: {
         status: newStatus,
@@ -61,7 +71,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           error:
-            'Booking not found, does not belong to you, or is no longer pending',
+            'Booking not found, does not belong to you, or has an invalid status',
         },
         { status: 409 }
       );
