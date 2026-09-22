@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, X } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/toast';
 
 type BookingActionsProps = {
   bookingId: string;
@@ -35,10 +39,18 @@ export function BookingActions({ bookingId }: BookingActionsProps) {
       }
 
       router.refresh();
+
+      toast.add({
+        title: 'Success',
+        description: `Booking ${action === 'ACCEPT' ? 'accepted' : 'rejected'} successfully.`,
+      });
     } catch (error) {
       console.error(error);
 
-      alert('Unable to update booking. Please try again.');
+      toast.add({
+        title: 'Error',
+        description: 'Failed to update booking.',
+      });
     } finally {
       setLoadingAction(null);
     }
