@@ -8,6 +8,7 @@ import {
   Calendar,
   ArrowRight,
   Clock,
+  Star,
 } from 'lucide-react';
 
 import { buttonVariants } from '@/components/ui/button';
@@ -30,12 +31,22 @@ export default async function ProviderProfilePage({
     },
     include: {
       user: true,
+
       services: {
         where: {
           isActive: true,
         },
         include: {
           category: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
+
+      reviews: {
+        include: {
+          customer: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -51,6 +62,13 @@ export default async function ProviderProfilePage({
   const primaryCategory =
     provider.services[0]?.category.name ?? 'Service Provider';
 
+  const reviewCount = provider.reviews.length;
+
+  const averageRating =
+    reviewCount > 0
+      ? provider.reviews.reduce((total, review) => total + review.rating, 0) /
+        reviewCount
+      : 0;
   return (
     <main className="min-h-screen bg-background pb-16">
       {/* Provider Header Hero */}
@@ -79,6 +97,23 @@ export default async function ProviderProfilePage({
               <p className="text-base font-medium text-muted-foreground">
                 {primaryCategory}
               </p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+
+                  <span className="font-bold">
+                    {reviewCount > 0 ? averageRating.toFixed(1) : 'New'}
+                  </span>
+                </div>
+
+                <span className="text-sm text-muted-foreground">
+                  {reviewCount === 0
+                    ? 'No reviews yet'
+                    : `(${reviewCount} ${
+                        reviewCount === 1 ? 'review' : 'reviews'
+                      })`}
+                </span>
+              </div>
 
               <div className="flex flex-wrap gap-4 pt-1 text-xs text-muted-foreground sm:text-sm">
                 <div className="flex items-center gap-1.5">
@@ -181,6 +216,76 @@ export default async function ProviderProfilePage({
                 </div>
               )}
             </div>
+
+            {/* Customer Reviews Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">
+                  Customer Reviews
+                </h2>
+
+                <span className="text-xs font-medium text-muted-foreground">
+                  {reviewCount === 0
+                    ? 'No reviews'
+                    : `${reviewCount} ${
+                        reviewCount === 1 ? 'review' : 'reviews'
+                      }`}
+                </span>
+              </div>
+
+              {provider.reviews.length === 0 ? (
+                <div className="rounded-2xl border border-dashed bg-card/50 p-8 text-center">
+                  <Star className="mx-auto h-8 w-8 text-muted-foreground" />
+
+                  <h3 className="mt-3 font-semibold">No reviews yet</h3>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This provider has not received any customer reviews yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {provider.reviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="rounded-2xl border bg-card p-5 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {review.customer.name}
+                          </p>
+
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {new Intl.DateTimeFormat('en-IN', {
+                              dateStyle: 'medium',
+                            }).format(new Date(review.createdAt))}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className="h-4 w-4 text-yellow-400"
+                              fill={
+                                star <= review.rating ? 'currentColor' : 'none'
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {review.comment && (
+                        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                          {review.comment}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar Column: Provider Summary */}
@@ -212,6 +317,22 @@ export default async function ProviderProfilePage({
                         ? `${provider.experience} Years`
                         : 'N/A'}
                     </p>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Star className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Customer Rating
+                      </p>
+
+                      <p className="font-semibold text-foreground">
+                        {reviewCount > 0
+                          ? `${averageRating.toFixed(1)} / 5 (${reviewCount})`
+                          : 'No reviews yet'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

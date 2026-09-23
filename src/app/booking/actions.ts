@@ -1,11 +1,11 @@
 'use server';
 
+import { redirect } from 'next/navigation';
+
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 
 export async function createBooking(formData: FormData) {
-  console.log('Booking form submitted');
-
   const serviceId = formData.get('serviceId');
   const addressId = formData.get('addressId');
   const date = formData.get('date');
@@ -49,7 +49,7 @@ export async function createBooking(formData: FormData) {
 
   const scheduledAt = new Date(`${date}T${time}`);
 
-  const booking = await prisma.booking.create({
+  await prisma.booking.create({
     data: {
       customerId: user.id,
       serviceId: service.id,
@@ -60,4 +60,6 @@ export async function createBooking(formData: FormData) {
       notes: typeof notes === 'string' ? notes.trim() || null : null,
     },
   });
+
+  redirect('/my-bookings');
 }

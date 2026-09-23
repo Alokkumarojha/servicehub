@@ -5,6 +5,7 @@ import {
   Briefcase,
   Wrench,
   ArrowRight,
+  Star,
 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -61,6 +62,12 @@ export default async function ProvidersPage({
 
     include: {
       user: true,
+
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
 
       services: {
         where: {
@@ -152,6 +159,14 @@ export default async function ProvidersPage({
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {providers.map((provider) => {
                 const primaryCategory = provider.services[0]?.category?.name;
+                const reviewCount = provider.reviews.length;
+                const averageRating =
+                  reviewCount > 0
+                    ? provider.reviews.reduce(
+                        (total, review) => total + review.rating,
+                        0
+                      ) / reviewCount
+                    : 0;
 
                 return (
                   <div
@@ -176,6 +191,32 @@ export default async function ProvidersPage({
                           <span className="inline-block rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             {primaryCategory ?? 'General Provider'}
                           </span>
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <Star
+                              className={`h-4 w-4 ${
+                                reviewCount > 0
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-muted-foreground'
+                              }`}
+                            />
+
+                            {reviewCount > 0 ? (
+                              <>
+                                <span className="text-sm font-semibold">
+                                  {averageRating.toFixed(1)}
+                                </span>
+
+                                <span className="text-xs text-muted-foreground">
+                                  ({reviewCount}{' '}
+                                  {reviewCount === 1 ? 'review' : 'reviews'})
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                No reviews yet
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 

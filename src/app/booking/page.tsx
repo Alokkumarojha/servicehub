@@ -1,13 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Plus,
-  FileText,
-  CheckCircle2,
-} from 'lucide-react';
+import { Calendar, Clock, MapPin, Plus, FileText } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

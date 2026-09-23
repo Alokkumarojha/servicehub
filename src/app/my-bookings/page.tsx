@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { CancelBookingButton } from './cancel-booking-button';
+import { ReviewBookingButton } from './review-booking-button';
 
 import {
   Calendar,
@@ -40,6 +41,7 @@ function renderStatusBadge(status: string) {
           Pending
         </span>
       );
+
     case 'ACCEPTED':
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600">
@@ -47,6 +49,7 @@ function renderStatusBadge(status: string) {
           Accepted
         </span>
       );
+
     case 'COMPLETED':
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-600">
@@ -54,14 +57,17 @@ function renderStatusBadge(status: string) {
           Completed
         </span>
       );
+
     case 'CANCELLED':
     case 'REJECTED':
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-600">
           <XCircle className="h-3.5 w-3.5" />
+
           {normalizedStatus === 'CANCELLED' ? 'Cancelled' : 'Rejected'}
         </span>
       );
+
     default:
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
@@ -78,7 +84,7 @@ export default async function MyBookingsPage() {
     redirect('/sign-in?redirect_url=/my-bookings');
   }
 
-  // 2. Fetch customer bookings
+  // Fetch customer bookings
   const bookings = await prisma.booking.findMany({
     where: {
       customerId: user.id,
@@ -91,6 +97,10 @@ export default async function MyBookingsPage() {
         },
       },
       address: true,
+
+      // Load review so we know whether
+      // this booking has already been reviewed
+      review: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -105,6 +115,7 @@ export default async function MyBookingsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight">
             My Bookings
           </h1>
+
           <p className="mt-1.5 text-sm text-muted-foreground">
             Track and manage your requested service bookings.
           </p>
@@ -118,11 +129,14 @@ export default async function MyBookingsPage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
               <CalendarX2 className="h-7 w-7" />
             </div>
+
             <h3 className="mt-4 text-lg font-bold">No bookings found</h3>
+
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
               You haven't requested any service bookings yet. Explore our top
               providers to get started.
             </p>
+
             <Link
               href="/services"
               className={buttonVariants({
@@ -146,11 +160,14 @@ export default async function MyBookingsPage() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Service Booking
                     </span>
+
                     <h2 className="text-xl font-bold text-card-foreground">
                       {booking.service.title}
                     </h2>
+
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
                       <User className="h-3.5 w-3.5" />
+
                       <span>
                         Provider:{' '}
                         <strong className="font-semibold text-foreground">
@@ -167,10 +184,11 @@ export default async function MyBookingsPage() {
                 <div className="mt-6 grid gap-4 border-t pt-4 sm:grid-cols-3">
                   {/* Price */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                       <IndianRupee className="h-3.5 w-3.5" />
                       <span>Total Amount</span>
                     </p>
+
                     <p className="text-base font-bold text-foreground">
                       ₹{Number(booking.price).toLocaleString('en-IN')}
                     </p>
@@ -178,10 +196,11 @@ export default async function MyBookingsPage() {
 
                   {/* Date & Time */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       <span>Scheduled For</span>
                     </p>
+
                     <p className="text-sm font-semibold text-foreground">
                       {formatDate(booking.scheduledAt)}
                     </p>
@@ -189,24 +208,42 @@ export default async function MyBookingsPage() {
 
                   {/* Address */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5" />
                       <span>Service Location</span>
                     </p>
+
                     <p className="text-sm font-semibold text-foreground">
                       {booking.address.label}
                     </p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
+
+                    <p className="line-clamp-1 text-xs text-muted-foreground">
                       {booking.address.addressLine}, {booking.address.city} -{' '}
                       {booking.address.pincode}
                     </p>
                   </div>
                 </div>
-                {/* Cancel Booking */}
+
+                {/* Customer Actions */}
                 {(booking.status === 'PENDING' ||
                   booking.status === 'ACCEPTED') && (
                   <div className="mt-5 border-t pt-4">
                     <CancelBookingButton bookingId={booking.id} />
+                  </div>
+                )}
+
+                {booking.status === 'COMPLETED' && !booking.review && (
+                  <div className="mt-5 border-t pt-4">
+                    <ReviewBookingButton bookingId={booking.id} />
+                  </div>
+                )}
+
+                {booking.status === 'COMPLETED' && booking.review && (
+                  <div className="mt-5 border-t pt-4">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      Review submitted
+                    </div>
                   </div>
                 )}
               </div>
