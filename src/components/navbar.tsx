@@ -1,19 +1,49 @@
 import Link from 'next/link';
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
-import { Wrench, Calendar, Sparkles } from 'lucide-react';
+import { auth } from '@clerk/nextjs/server';
+import {
+  Wrench,
+  Calendar,
+  Sparkles,
+  BriefcaseBusiness,
+  Settings2,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { prisma } from '@/lib/prisma';
 
-export function Navbar() {
+export async function Navbar() {
+  const { userId } = await auth();
+
+  let isProvider = false;
+
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      select: {
+        provider: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    isProvider = Boolean(user?.provider);
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="group flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
             <Wrench className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+
+          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-xl font-bold tracking-tight text-transparent">
             ServiceHub
           </span>
         </Link>
@@ -44,7 +74,6 @@ export function Navbar() {
 
         {/* Authentication State Controls */}
         <div className="flex items-center gap-3">
-          {/* Signed Out View */}
           <Show when="signed-out">
             <SignInButton mode="redirect">
               <Button variant="ghost" size="sm" className="font-medium">
@@ -60,9 +89,39 @@ export function Navbar() {
             </SignUpButton>
           </Show>
 
-          {/* Signed In View */}
           <Show when="signed-in">
             <div className="flex items-center gap-4">
+              {userId && !isProvider && (
+                <Link
+                  href="/providers/onboarding"
+                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <BriefcaseBusiness className="h-4 w-4" />
+                  <span>Become a Provider</span>
+                </Link>
+              )}
+
+              {/* Provider-only navigation */}
+              {isProvider && (
+                <>
+                  <Link
+                    href="/providers/services"
+                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    <span>My Services</span>
+                  </Link>
+
+                  <Link
+                    href="/providers/bookings"
+                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <BriefcaseBusiness className="h-4 w-4" />
+                    <span>Jobs</span>
+                  </Link>
+                </>
+              )}
+
               <Link
                 href="/my-bookings"
                 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
