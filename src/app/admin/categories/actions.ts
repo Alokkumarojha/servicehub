@@ -10,6 +10,10 @@ export type CategoryFormState = {
   message: string;
 };
 
+// =========================
+// CREATE CATEGORY
+// =========================
+
 export async function createCategory(
   _previousState: CategoryFormState,
   formData: FormData
@@ -81,5 +85,63 @@ export async function createCategory(
   return {
     success: true,
     message: 'Category created successfully.',
+  };
+}
+
+// =========================
+// TOGGLE CATEGORY STATUS
+// =========================
+
+export async function toggleCategoryStatus(
+  _previousState: CategoryFormState,
+  formData: FormData
+): Promise<CategoryFormState> {
+  const user = await getCurrentUser();
+
+  if (user.role !== 'ADMIN') {
+    return {
+      success: false,
+      message: 'You are not authorized to perform this action.',
+    };
+  }
+
+  const categoryId = formData.get('categoryId');
+
+  if (typeof categoryId !== 'string' || !categoryId) {
+    return {
+      success: false,
+      message: 'Category ID is required.',
+    };
+  }
+
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+  });
+
+  if (!category) {
+    return {
+      success: false,
+      message: 'Category not found.',
+    };
+  }
+
+  const updatedCategory = await prisma.category.update({
+    where: {
+      id: category.id,
+    },
+    data: {
+      isActive: !category.isActive,
+    },
+  });
+
+  revalidatePath('/admin/categories');
+
+  return {
+    success: true,
+    message: updatedCategory.isActive
+      ? 'Category activated successfully.'
+      : 'Category deactivated successfully.',
   };
 }

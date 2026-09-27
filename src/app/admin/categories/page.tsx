@@ -3,6 +3,8 @@ import { FolderKanban } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import CategoryForm from './category-form';
 
+import CategoryStatusButton from './category-status-button';
+
 export default async function AdminCategoriesPage() {
   const categories = await prisma.category.findMany({
     orderBy: {
@@ -42,10 +44,11 @@ export default async function AdminCategoriesPage() {
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <CategoryForm />
-          <div className="grid grid-cols-[1fr_140px_140px] border-b bg-muted/40 px-6 py-3 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[1fr_140px_140px_140px] border-b bg-muted/40 px-6 py-3 text-sm font-medium text-muted-foreground">
             <span>Category</span>
             <span>Status</span>
             <span>Services</span>
+            <span>Actions</span>
           </div>
 
           {categories.length === 0 ? (
@@ -80,6 +83,11 @@ export default async function AdminCategoriesPage() {
                 <p className="text-sm font-medium">
                   {category._count.services}
                 </p>
+
+                <CategoryStatusButton
+                  categoryId={category.id}
+                  isActive={category.isActive}
+                />
               </div>
             ))
           )}
