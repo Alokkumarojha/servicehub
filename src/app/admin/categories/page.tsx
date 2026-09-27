@@ -1,4 +1,5 @@
 import { FolderKanban } from 'lucide-react';
+import Link from 'next/link';
 
 import { prisma } from '@/lib/prisma';
 import CategoryForm from './category-form';
@@ -59,7 +60,7 @@ export default async function AdminCategoriesPage() {
             categories.map((category) => (
               <div
                 key={category.id}
-                className="grid grid-cols-[1fr_140px_140px] items-center border-b px-6 py-4 last:border-b-0"
+                className="grid grid-cols-[1fr_140px_140px_140px] items-center border-b px-6 py-4 last:border-b-0"
               >
                 <div>
                   <p className="font-semibold">{category.name}</p>
@@ -84,10 +85,19 @@ export default async function AdminCategoriesPage() {
                   {category._count.services}
                 </p>
 
-                <CategoryStatusButton
-                  categoryId={category.id}
-                  isActive={category.isActive}
-                />
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/admin/categories/${category.id}/edit`}
+                    className="rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                  >
+                    Edit
+                  </Link>
+
+                  <CategoryStatusButton
+                    categoryId={category.id}
+                    isActive={category.isActive}
+                  />
+                </div>
               </div>
             ))
           )}

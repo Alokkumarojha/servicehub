@@ -1,11 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 
 export type CategoryFormState = {
+  success: boolean;
+  message: string;
+};
+export type EditCategoryState = {
   success: boolean;
   message: string;
 };
@@ -144,4 +149,108 @@ export async function toggleCategoryStatus(
       ? 'Category activated successfully.'
       : 'Category deactivated successfully.',
   };
+}
+
+// =========================
+// Update category
+// =========================
+export async function updateCategory(
+  _previousState: EditCategoryState,
+  formData: FormData
+): Promise<EditCategoryState> {
+  const user = await getCurrentUser();
+
+  if (user.role !== 'ADMIN') {
+    return {
+      success: false,
+      message: 'You are not authorized to perform this action.',
+    };
+  }
+
+  const categoryId = formData.get('categoryId');
+  const name = formData.get('name');
+
+  if (
+    typeof categoryId !== 'string' ||
+    !categoryId ||
+    typeof name !== 'string' ||
+    !name.trim()
+  ) {
+    return {
+      success: false,
+      message: 'Please enter a valid category name.',
+    };
+  }
+
+  const cleanName = name.trim();
+
+  const slug = cleanName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (!slug) {
+    return {
+      success: false,
+      message: 'Please enter a valid category name.',
+    };
+  }
+
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+  });
+
+  if (!category) {
+    return {
+      success: false,
+      message: 'Category not found.',
+    };
+  }
+
+  const duplicateCategory = await prisma.category.findFirst({
+    where: {
+      AND: [
+        {
+          id: {
+            not: categoryId,
+          },
+        },
+        {
+          OR: [
+            {
+              name: {
+                equals: cleanName,
+                mode: 'insensitive',
+              },
+            },
+            {
+              slug,
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  if (duplicateCategory) {
+    return {
+      success: false,
+      message: 'Category already exists.',
+    };
+  }
+
+  await prisma.category.update({
+    where: {
+      id: categoryId,
+    },
+    data: {
+      name: cleanName,
+      slug,
+    },
+  });
+
+  revalidatePath('/admin/categories');
+  redirect('/admin/categories');
 }
