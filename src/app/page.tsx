@@ -1,17 +1,22 @@
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { prisma } from '@/lib/prisma';
 
-const services = [
-  'Electrician',
-  'Plumber',
-  'AC Repair',
-  'Carpenter',
-  'Tutor',
-  'Cleaning',
-];
-
-export default function Home() {
+export default async function Home() {
+  const categories = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    },
+    orderBy: {
+      name: 'asc',
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  });
   return (
     <main>
       {/* Hero Section */}
@@ -50,16 +55,16 @@ export default function Home() {
           </div>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
+            {categories.map((category) => (
               <Link
-                key={service}
-                href="/services"
+                key={category.id}
+                href={`/providers?category=${category.slug}`}
                 className="rounded-lg border p-6 transition-colors hover:bg-muted"
               >
-                <h3 className="font-semibold">{service}</h3>
+                <h3 className="font-semibold">{category.name}</h3>
 
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Find trusted {service.toLowerCase()} professionals.
+                  Find trusted {category.name.toLowerCase()} professionals.
                 </p>
               </Link>
             ))}
