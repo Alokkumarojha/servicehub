@@ -7,6 +7,7 @@ import {
   Sparkles,
   BriefcaseBusiness,
   Settings2,
+  LayoutDashboard,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ export async function Navbar() {
   const { userId } = await auth();
 
   let isProvider = false;
+  let isAdmin = false;
 
   if (userId) {
     const user = await prisma.user.findUnique({
@@ -23,6 +25,7 @@ export async function Navbar() {
         clerkId: userId,
       },
       select: {
+        role: true,
         provider: {
           select: {
             id: true,
@@ -31,7 +34,8 @@ export async function Navbar() {
       },
     });
 
-    isProvider = Boolean(user?.provider);
+    isAdmin = user?.role === 'ADMIN';
+    isProvider = user?.role === 'PROVIDER' && Boolean(user.provider);
   }
 
   return (
@@ -91,7 +95,16 @@ export async function Navbar() {
 
           <Show when="signed-in">
             <div className="flex items-center gap-4">
-              {userId && !isProvider && (
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Admin Dashboard</span>
+                </Link>
+              )}
+              {userId && !isProvider && !isAdmin && (
                 <Link
                   href="/providers/onboarding"
                   className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -122,13 +135,15 @@ export async function Navbar() {
                 </>
               )}
 
-              <Link
-                href="/my-bookings"
-                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>My Bookings</span>
-              </Link>
+              {!isAdmin && (
+                <Link
+                  href="/my-bookings"
+                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>My Bookings</span>
+                </Link>
+              )}
 
               <div className="h-5 w-px bg-border" />
 

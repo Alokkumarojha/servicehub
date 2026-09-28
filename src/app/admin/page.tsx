@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { prisma } from '@/lib/prisma';
+import Link from 'next/link';
 
 export default async function AdminDashboardPage() {
   const [
@@ -56,6 +57,7 @@ export default async function AdminDashboardPage() {
       label: 'Categories',
       value: categoryCount,
       icon: FolderKanban,
+      href: '/admin/categories',
     },
   ];
 
@@ -80,10 +82,13 @@ export default async function AdminDashboardPage() {
           {stats.map((stat) => {
             const Icon = stat.icon;
 
-            return (
+            const card = (
               <div
-                key={stat.label}
-                className="rounded-2xl border bg-card p-6 shadow-sm"
+                className={`rounded-2xl border bg-card p-6 shadow-sm ${
+                  stat.href
+                    ? 'transition-all hover:-translate-y-0.5 hover:shadow-md'
+                    : ''
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -102,6 +107,16 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
             );
+
+            if (stat.href) {
+              return (
+                <Link key={stat.label} href={stat.href} className="block">
+                  {card}
+                </Link>
+              );
+            }
+
+            return <div key={stat.label}>{card}</div>;
           })}
         </div>
       </section>
