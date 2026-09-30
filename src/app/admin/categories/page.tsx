@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import CategoryForm from './category-form';
 
 import CategoryStatusButton from './category-status-button';
+import { DeleteCategoryButton } from './delete-category-button';
 
 export default async function AdminCategoriesPage() {
   const categories = await prisma.category.findMany({
@@ -45,7 +46,7 @@ export default async function AdminCategoriesPage() {
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <CategoryForm />
-          <div className="grid grid-cols-[1fr_140px_140px_140px] border-b bg-muted/40 px-6 py-3 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[minmax(0,1fr)_140px_140px_300px] items-center border-b px-6 py-4 last:border-b-0">
             <span>Category</span>
             <span>Status</span>
             <span>Services</span>
@@ -60,7 +61,7 @@ export default async function AdminCategoriesPage() {
             categories.map((category) => (
               <div
                 key={category.id}
-                className="grid grid-cols-[1fr_140px_140px_140px] items-center border-b px-6 py-4 last:border-b-0"
+                className="grid grid-cols-[1fr_140px_140px_300px] items-center border-b px-6 py-4 last:border-b-0"
               >
                 <div>
                   <p className="font-semibold">{category.name}</p>
@@ -96,6 +97,11 @@ export default async function AdminCategoriesPage() {
                   <CategoryStatusButton
                     categoryId={category.id}
                     isActive={category.isActive}
+                  />
+
+                  <DeleteCategoryButton
+                    categoryId={category.id}
+                    categoryName={category.name}
                   />
                 </div>
               </div>

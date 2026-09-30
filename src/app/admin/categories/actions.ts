@@ -254,3 +254,71 @@ export async function updateCategory(
   revalidatePath('/admin/categories');
   redirect('/admin/categories');
 }
+
+// =========================
+// DELETE CATEGORY
+// =========================
+
+export async function deleteCategory(
+  _previousState: CategoryFormState,
+  formData: FormData
+): Promise<CategoryFormState> {
+  const user = await getCurrentUser();
+
+  if (user.role !== 'ADMIN') {
+    return {
+      success: false,
+      message: 'You are not authorized to perform this action.',
+    };
+  }
+
+  const categoryId = formData.get('categoryId');
+
+  if (typeof categoryId !== 'string' || !categoryId) {
+    return {
+      success: false,
+      message: 'Category ID is required.',
+    };
+  }
+
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          services: true,
+        },
+      },
+    },
+  });
+
+  if (!category) {
+    return {
+      success: false,
+      message: 'Category not found.',
+    };
+  }
+
+  if (category._count.services > 0) {
+    return {
+      success: false,
+      message: 'Category has linked services. Deactivate it instead.',
+    };
+  }
+
+  await prisma.category.delete({
+    where: {
+      id: category.id,
+    },
+  });
+
+  revalidatePath('/admin/categories');
+
+  return {
+    success: true,
+    message: 'Category deleted successfully.',
+  };
+}
