@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 import { createBooking } from './actions';
+import { auth } from '@clerk/nextjs/server';
 
 type BookingPageProps = {
   searchParams: Promise<{
@@ -18,13 +19,18 @@ type BookingPageProps = {
 export default async function BookingPage({ searchParams }: BookingPageProps) {
   const { serviceId } = await searchParams;
 
-  // 1. Auth Guard (Prevents null user crash)
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect(
-      `/login?callbackUrl=/booking${serviceId ? `?serviceId=${serviceId}` : ''}`
-    );
+  // 1. Authentication guard
+  const { userId } = await auth();
+
+  if (!userId) {
+    const returnUrl = `/booking${
+      serviceId ? `?serviceId=${encodeURIComponent(serviceId)}` : ''
+    }`;
+
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`);
   }
+
+  const user = await getCurrentUser();
 
   // 2. Fetch User Addresses
   const addresses = await prisma.address.findMany({

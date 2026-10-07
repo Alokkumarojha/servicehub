@@ -7,11 +7,6 @@ import { prisma } from '@/lib/prisma';
 export default async function ProviderBookingsPage() {
   const user = await getCurrentUser();
 
-  // Only providers can access this page
-  if (user.role !== 'PROVIDER') {
-    redirect('/');
-  }
-
   // Find the provider profile linked to this user
   const provider = await prisma.provider.findUnique({
     where: {

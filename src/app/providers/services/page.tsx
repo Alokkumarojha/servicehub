@@ -18,14 +18,16 @@ import {
 import { buttonVariants, Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
 
 export default async function ProviderServicesPage() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
 
-  // 1. Unauthenticated user handling
-  if (!user) {
+  if (!userId) {
     redirect('/sign-in?redirect_url=/providers/services');
   }
+
+  const user = await getCurrentUser();
 
   // 2. Fetch Provider & Services
   const provider = await prisma.provider.findUnique({
