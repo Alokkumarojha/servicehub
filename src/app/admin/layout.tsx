@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUser } from '@/lib/auth-user';
+import { NavigationLink } from '@/components/navigation-link';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -27,5 +28,16 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   // Step 5: Admin hai
-  return <>{children}</>;
+  return (
+    <>
+      <div className="border-b bg-card">
+        <nav aria-label="Administration" className="mx-auto flex max-w-7xl flex-wrap gap-1 px-4 py-2 sm:px-6 lg:px-8">
+          <NavigationLink href="/admin" exact>Overview</NavigationLink>
+          <NavigationLink href="/admin/categories">Categories</NavigationLink>
+          <NavigationLink href="/admin/providers">Providers</NavigationLink>
+        </nav>
+      </div>
+      {children}
+    </>
+  );
 }

@@ -1,17 +1,6 @@
-import Link from 'next/link';
-import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import { auth } from '@clerk/nextjs/server';
-import {
-  Wrench,
-  Calendar,
-  Sparkles,
-  BriefcaseBusiness,
-  Settings2,
-  LayoutDashboard,
-} from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
 import { prisma } from '@/lib/prisma';
+import { NavbarNavigation } from '@/components/navbar-navigation';
 
 export async function Navbar() {
   const { userId } = await auth();
@@ -35,130 +24,25 @@ export async function Navbar() {
     });
 
     isAdmin = user?.role === 'ADMIN';
-    isProvider = user?.role === 'PROVIDER' && Boolean(user.provider);
+    isProvider = Boolean(user?.provider);
   }
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
-        <Link href="/" className="group flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
-            <Wrench className="h-5 w-5" />
-          </div>
+  const capabilityLinks = [];
+  if (userId) {
+    capabilityLinks.push({ href: '/my-bookings', label: 'My Bookings' });
+    if (!isProvider && !isAdmin) {
+      capabilityLinks.push({ href: '/providers/onboarding', label: 'Become a Provider' });
+    }
+    if (isProvider) {
+      capabilityLinks.push(
+        { href: '/providers/services', label: 'My Services' },
+        { href: '/providers/bookings', label: 'Jobs' },
+      );
+    }
+    if (isAdmin) {
+      capabilityLinks.push({ href: '/admin', label: 'Admin Dashboard' });
+    }
+  }
 
-          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-            ServiceHub
-          </span>
-        </Link>
-
-        {/* Central Navigation Links */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link
-            href="/"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/services"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Services
-          </Link>
-
-          <Link
-            href="/providers"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Providers
-          </Link>
-        </nav>
-
-        {/* Authentication State Controls */}
-        <div className="flex items-center gap-3">
-          <Show when="signed-out">
-            <SignInButton mode="redirect">
-              <Button variant="ghost" size="sm" className="font-medium">
-                Sign In
-              </Button>
-            </SignInButton>
-
-            <SignUpButton mode="redirect">
-              <Button size="sm" className="gap-1.5 font-medium shadow-xs">
-                <Sparkles className="h-3.5 w-3.5" />
-                Sign Up
-              </Button>
-            </SignUpButton>
-          </Show>
-
-          <Show when="signed-in">
-            <div className="flex items-center gap-4">
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Admin Dashboard</span>
-                </Link>
-              )}
-              {userId && !isProvider && !isAdmin && (
-                <Link
-                  href="/providers/onboarding"
-                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <BriefcaseBusiness className="h-4 w-4" />
-                  <span>Become a Provider</span>
-                </Link>
-              )}
-
-              {/* Provider-only navigation */}
-              {isProvider && (
-                <>
-                  <Link
-                    href="/providers/services"
-                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    <span>My Services</span>
-                  </Link>
-
-                  <Link
-                    href="/providers/bookings"
-                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <BriefcaseBusiness className="h-4 w-4" />
-                    <span>Jobs</span>
-                  </Link>
-                </>
-              )}
-
-              {!isAdmin && (
-                <Link
-                  href="/my-bookings"
-                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>My Bookings</span>
-                </Link>
-              )}
-
-              <div className="h-5 w-px bg-border" />
-
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox:
-                      'h-9 w-9 ring-2 ring-primary/10 transition-transform hover:scale-105',
-                  },
-                }}
-              />
-            </div>
-          </Show>
-        </div>
-      </div>
-    </header>
-  );
+  return <NavbarNavigation capabilityLinks={capabilityLinks} />;
 }
