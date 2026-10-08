@@ -22,7 +22,8 @@ type ProvidersPageProps = {
 export default async function ProvidersPage({
   searchParams,
 }: ProvidersPageProps) {
-  const { category, q } = await searchParams;
+  const { category, q: searchQuery } = await searchParams;
+  const q = searchQuery?.trim();
 
   const providers = await prisma.provider.findMany({
     where: {
@@ -141,7 +142,7 @@ export default async function ProvidersPage({
               </div>
               <h2 className="mt-4 text-lg font-semibold">No providers found</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                We couldn't find any verified providers matching your criteria.
+                We couldn&apos;t find any verified providers matching your criteria.
               </p>
               {(q || category) && (
                 <Link

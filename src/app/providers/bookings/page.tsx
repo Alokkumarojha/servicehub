@@ -54,7 +54,7 @@ export default async function ProviderBookingsPage() {
             <h2 className="text-lg font-semibold">No booking requests</h2>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              You don't have any service requests yet.
+              You don&apos;t have any service requests yet.
             </p>
           </div>
         ) : (
@@ -62,7 +62,7 @@ export default async function ProviderBookingsPage() {
             {bookings.map((booking) => (
               <div
                 key={booking.id}
-                className="rounded-xl border bg-card p-5 shadow-sm sm:p-6"
+                className="min-w-0 rounded-xl border bg-card p-5 shadow-sm [overflow-wrap:anywhere] sm:p-6"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -75,9 +75,21 @@ export default async function ProviderBookingsPage() {
                     </h2>
                   </div>
 
-                  <span className="w-fit rounded-full border px-3 py-1 text-xs font-semibold">
-                    {booking.status}
+                  <span className="w-fit shrink-0 rounded-full border bg-muted px-3 py-1 text-xs font-semibold">
+                    {booking.status.charAt(0) + booking.status.slice(1).toLowerCase()}
                   </span>
+                </div>
+
+                <div className="mt-4 rounded-lg bg-muted/50 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Scheduled date and time</p>
+                  <time dateTime={booking.scheduledAt.toISOString()} className="mt-1 block text-base font-semibold">
+                    {new Intl.DateTimeFormat('en-IN', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      timeZone: 'Asia/Kolkata',
+                    }).format(booking.scheduledAt)}{' '}
+                    <span className="text-sm font-normal text-muted-foreground">IST</span>
+                  </time>
                 </div>
 
                 <div className="mt-5 grid gap-4 border-t pt-4 sm:grid-cols-3">
@@ -111,6 +123,13 @@ export default async function ProviderBookingsPage() {
                     </p>
                   </div>
                 </div>
+
+                {booking.notes?.trim() && (
+                  <div className="mt-4 border-t pt-4">
+                    <p className="text-xs font-medium text-muted-foreground">Customer notes</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{booking.notes}</p>
+                  </div>
+                )}
 
                 {(booking.status === 'PENDING' ||
                   booking.status === 'ACCEPTED') && (

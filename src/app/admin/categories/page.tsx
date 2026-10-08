@@ -44,70 +44,55 @@ export default async function AdminCategoriesPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-          <CategoryForm />
-          <div className="grid grid-cols-[minmax(0,1fr)_140px_140px_300px] items-center border-b px-6 py-4 last:border-b-0">
-            <span>Category</span>
-            <span>Status</span>
-            <span>Services</span>
-            <span>Actions</span>
+        <CategoryForm />
+        {categories.length === 0 ? (
+          <div className="rounded-2xl border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
+            No categories found.
           </div>
-
-          {categories.length === 0 ? (
-            <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-              No categories found.
-            </div>
-          ) : (
-            categories.map((category) => (
-              <div
-                key={category.id}
-                className="grid grid-cols-[1fr_140px_140px_300px] items-center border-b px-6 py-4 last:border-b-0"
-              >
-                <div>
-                  <p className="font-semibold">{category.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {category.slug}
-                  </p>
-                </div>
-
-                <div>
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      category.isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {category.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-
-                <p className="text-sm font-medium">
-                  {category._count.services}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/admin/categories/${category.id}/edit`}
-                    className="rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                  >
-                    Edit
-                  </Link>
-
-                  <CategoryStatusButton
-                    categoryId={category.id}
-                    isActive={category.isActive}
-                  />
-
-                  <DeleteCategoryButton
-                    categoryId={category.id}
-                    categoryName={category.name}
-                  />
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        ) : (
+          <div className="lg:rounded-2xl lg:border lg:bg-card lg:shadow-sm">
+            <table role="table" className="block w-full text-left text-sm lg:table lg:table-fixed">
+              <caption className="sr-only">Service categories and management actions</caption>
+              <thead role="rowgroup" className="sr-only lg:not-sr-only lg:table-header-group">
+                <tr role="row" className="border-b text-muted-foreground">
+                  <th scope="col" className="px-4 py-3 font-medium">Category</th>
+                  <th scope="col" className="w-28 px-4 py-3 font-medium">Status</th>
+                  <th scope="col" className="w-24 px-4 py-3 font-medium">Services</th>
+                  <th scope="col" className="w-80 px-4 py-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup" className="grid gap-4 lg:table-row-group">
+                {categories.map((category) => (
+                  <tr key={category.id} role="row" className="grid min-w-0 grid-cols-2 gap-4 rounded-xl border bg-card p-4 lg:table-row lg:rounded-none lg:border-0 lg:border-b lg:p-0 lg:last:border-b-0">
+                    <th scope="row" role="rowheader" className="col-span-2 block min-w-0 text-left font-normal [overflow-wrap:anywhere] lg:table-cell lg:px-4 lg:py-4">
+                      <span className="block font-semibold">{category.name}</span>
+                      <span className="block text-muted-foreground">{category.slug}</span>
+                    </th>
+                    <td role="cell" className="block lg:table-cell lg:px-4 lg:py-4">
+                      <span aria-hidden="true" className="mb-1 block text-xs text-muted-foreground lg:hidden">Status</span>
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${category.isActive ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
+                        {category.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td role="cell" className="block lg:table-cell lg:px-4 lg:py-4">
+                      <span aria-hidden="true" className="mb-1 block text-xs text-muted-foreground lg:hidden">Services</span>
+                      {category._count.services}
+                    </td>
+                    <td role="cell" className="col-span-2 block min-w-0 lg:table-cell lg:px-4 lg:py-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href={`/admin/categories/${category.id}/edit`} className="inline-flex min-h-11 items-center rounded-md border px-3 py-2 font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                          Edit
+                        </Link>
+                        <CategoryStatusButton categoryId={category.id} isActive={category.isActive} />
+                        <DeleteCategoryButton categoryId={category.id} categoryName={category.name} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </main>
   );

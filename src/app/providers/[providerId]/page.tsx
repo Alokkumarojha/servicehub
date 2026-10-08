@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Calendar,
   ArrowRight,
+  ArrowLeft,
   Clock,
   Star,
 } from 'lucide-react';
@@ -70,10 +71,14 @@ export default async function ProviderProfilePage({
         reviewCount
       : 0;
   return (
-    <main className="min-h-screen bg-background pb-16">
+    <main className="min-h-screen bg-background pb-16 [overflow-wrap:anywhere]">
       {/* Provider Header Hero */}
       <section className="border-b bg-card/40 py-10 sm:py-12">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <Link href="/providers" className={buttonVariants({ variant: 'ghost', className: 'mb-4 -ml-3 gap-2' })}>
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to Providers
+          </Link>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             {/* Avatar */}
             <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-3xl font-bold text-primary shadow-inner">
@@ -81,7 +86,7 @@ export default async function ProviderProfilePage({
             </div>
 
             {/* Basic Info */}
-            <div className="space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
                   {provider.user.name}
@@ -97,7 +102,7 @@ export default async function ProviderProfilePage({
               <p className="text-base font-medium text-muted-foreground">
                 {primaryCategory}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
 
@@ -119,14 +124,14 @@ export default async function ProviderProfilePage({
                 <div className="flex items-center gap-1.5">
                   <Briefcase className="h-4 w-4" />
                   <span>
-                    {provider.experience
+                    {provider.experience != null
                       ? `${provider.experience} years experience`
                       : 'Experience not specified'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <Mail className="h-4 w-4" />
+                <div className="flex min-w-0 items-start gap-1.5">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{provider.user.email}</span>
                 </div>
               </div>
@@ -139,7 +144,7 @@ export default async function ProviderProfilePage({
       <section className="pt-8">
         <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
           {/* Main Column: About & Services */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="min-w-0 lg:col-span-2 space-y-8">
             {/* About Section */}
             <div className="rounded-2xl border bg-card p-6 shadow-sm">
               <h2 className="text-xl font-bold tracking-tight">
@@ -153,7 +158,7 @@ export default async function ProviderProfilePage({
 
             {/* Services Offered Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-bold tracking-tight">
                   Services Offered
                 </h2>
@@ -177,7 +182,7 @@ export default async function ProviderProfilePage({
                     >
                       <div>
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                               {service.category.name}
                             </span>
@@ -186,7 +191,7 @@ export default async function ProviderProfilePage({
                             </h3>
                           </div>
 
-                          <div className="w-fit rounded-lg bg-muted px-3 py-1 text-base font-bold text-foreground">
+                          <div className="w-fit shrink-0 rounded-lg bg-muted px-3 py-1 text-base font-bold text-foreground">
                             ₹{Number(service.price).toLocaleString('en-IN')}
                           </div>
                         </div>
@@ -219,7 +224,7 @@ export default async function ProviderProfilePage({
 
             {/* Customer Reviews Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-bold tracking-tight">
                   Customer Reviews
                 </h2>
@@ -250,7 +255,7 @@ export default async function ProviderProfilePage({
                       key={review.id}
                       className="rounded-2xl border bg-card p-5 shadow-sm"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="font-semibold text-foreground">
                             {review.customer.name}
@@ -263,7 +268,7 @@ export default async function ProviderProfilePage({
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-0.5">
+                        <div className="flex shrink-0 items-center gap-0.5" role="img" aria-label={`${review.rating} out of 5 stars`}>
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
@@ -289,8 +294,8 @@ export default async function ProviderProfilePage({
           </div>
 
           {/* Sidebar Column: Provider Summary */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 rounded-2xl border bg-card p-6 shadow-sm space-y-5">
+          <div className="min-w-0 lg:col-span-1">
+            <div className="xl:sticky xl:top-20 rounded-2xl border bg-card p-6 shadow-sm space-y-5">
               <h3 className="text-lg font-bold tracking-tight border-b pb-3">
                 Provider Summary
               </h3>
@@ -313,26 +318,23 @@ export default async function ProviderProfilePage({
                   <div>
                     <p className="text-xs text-muted-foreground">Experience</p>
                     <p className="font-semibold text-foreground">
-                      {provider.experience
+                      {provider.experience != null
                         ? `${provider.experience} Years`
                         : 'N/A'}
                     </p>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <Star className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                </div>
 
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Customer Rating
-                      </p>
-
-                      <p className="font-semibold text-foreground">
-                        {reviewCount > 0
-                          ? `${averageRating.toFixed(1)} / 5 (${reviewCount})`
-                          : 'No reviews yet'}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <Star className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Customer Rating</p>
+                    <p className="font-semibold text-foreground">
+                      {reviewCount > 0
+                        ? `${averageRating.toFixed(1)} / 5 (${reviewCount})`
+                        : 'No reviews yet'}
+                    </p>
                   </div>
                 </div>
 

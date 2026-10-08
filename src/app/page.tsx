@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { prisma } from '@/lib/prisma';
 
 export default async function Home() {
@@ -31,15 +32,18 @@ export default async function Home() {
             place.
           </p>
 
-          <div className="mx-auto mt-8 flex max-w-xl flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
+          <form action="/providers" method="GET" role="search" className="mx-auto mt-8 flex max-w-xl flex-col gap-3 sm:flex-row">
+            <label htmlFor="home-search" className="sr-only">Search services</label>
+            <Input
+              id="home-search"
+              name="q"
+              type="search"
               placeholder="What service do you need?"
-              className="h-10 flex-1 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 bg-background"
             />
 
-            <Button>Search Services</Button>
-          </div>
+            <Button type="submit">Search Services</Button>
+          </form>
         </div>
       </section>
 
