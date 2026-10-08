@@ -14,10 +14,6 @@ export async function PATCH(
   try {
     const user = await getCurrentUser();
 
-    if (user.role !== 'PROVIDER') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const provider = await prisma.provider.findUnique({
       where: {
         userId: user.id,
