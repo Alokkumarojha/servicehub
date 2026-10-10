@@ -2,12 +2,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Calendar, Clock, MapPin, Plus, FileText } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { buttonVariants } from '@/components/ui/button';
+import { ActionForm, FormTextarea, FormRadio, FormInput, FormSelect, FieldError, SubmitButton } from '@/components/action-form';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
-import { createBooking } from './actions';
+import { createBooking, submitBooking } from './actions';
 import { auth } from '@clerk/nextjs/server';
 
 type BookingPageProps = {
@@ -80,8 +79,17 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
       {/* Main Booking Form */}
       <section className="pt-8">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <form
-            action={createBooking}
+          {services.length === 0 && (
+            <div role="status" className="mb-6 rounded-xl border bg-card p-6">
+              <h2 className="font-semibold">No service available to book</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Choose another service from an existing provider profile.</p>
+              <Link href="/providers" className={buttonVariants({ className: 'mt-4' })}>Browse Providers</Link>
+            </div>
+          )}
+          <ActionForm
+            action={submitBooking}
+          fallbackAction={createBooking}
+          failureMessage="We could not confirm your booking. Check My Bookings before trying again."
             className="space-y-8 rounded-2xl border bg-card p-6 shadow-sm sm:p-8"
           >
             {/* 1. Select Service */}
@@ -94,7 +102,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                 <span className="text-destructive">*</span>
               </label>
 
-              <select
+              <FormSelect
                 id="serviceId"
                 name="serviceId"
                 required
@@ -111,7 +119,8 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                     {service.provider.user.name})
                   </option>
                 ))}
-              </select>
+              </FormSelect>
+              <FieldError name="serviceId" />
             </div>
 
             {/* 2. Date & Time Grid */}
@@ -125,7 +134,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                   <span>Preferred Date</span>
                   <span className="text-destructive">*</span>
                 </label>
-                <Input
+                <FormInput
                   id="date"
                   name="date"
                   type="date"
@@ -133,6 +142,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                   required
                   className="h-11"
                 />
+              <FieldError name="date" />
               </div>
 
               <div className="space-y-2">
@@ -144,24 +154,25 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                   <span>Preferred Time</span>
                   <span className="text-destructive">*</span>
                 </label>
-                <Input
+                <FormInput
                   id="time"
                   name="time"
                   type="time"
                   required
                   className="h-11"
                 />
+              <FieldError name="time" />
               </div>
             </div>
 
             {/* 3. Address Selection */}
-            <div className="space-y-3">
+            <div role="group" aria-labelledby="address-group-label" className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <span id="address-group-label" className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>Service Address</span>
                   <span className="text-destructive">*</span>
-                </label>
+                </span>
 
                 <Link
                   href={`/addresses?returnTo=/booking${serviceId ? `?serviceId=${serviceId}` : ''}`}
@@ -176,6 +187,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                 </Link>
               </div>
 
+              <FieldError name="addressId" />
               {addresses.length === 0 ? (
                 <div className="rounded-xl border border-dashed p-6 text-center">
                   <p className="text-sm text-muted-foreground">
@@ -203,7 +215,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                         <span className="font-semibold text-sm">
                           {address.label}
                         </span>
-                        <input
+                        <FormRadio
                           type="radio"
                           name="addressId"
                           value={address.id}
@@ -233,7 +245,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
                 <span>Additional Notes (Optional)</span>
               </label>
 
-              <Textarea
+              <FormTextarea
                 id="notes"
                 name="notes"
                 placeholder="E.g., Please call before arriving, bring extra wire length..."
@@ -243,14 +255,15 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
             </div>
 
             {/* Submit Button */}
-            <Button
+            <SubmitButton pendingLabel="Requesting service…" disabled={services.length === 0 || addresses.length === 0}
               type="submit"
               size="lg"
               className="w-full text-base font-semibold"
             >
               Confirm & Request Service
-            </Button>
-          </form>
+            </SubmitButton>
+            <Link href="/my-bookings" className="block text-center text-sm underline underline-offset-4">Check My Bookings</Link>
+          </ActionForm>
         </div>
       </section>
     </main>

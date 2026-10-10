@@ -9,12 +9,11 @@ import {
   FileText,
 } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { buttonVariants } from '@/components/ui/button';
+import { ActionForm, FormTextarea, FormInput, FormSelect, FieldError, SubmitButton } from '@/components/action-form';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
-import { updateService } from './actions';
+import { updateService, submitServiceUpdate } from './actions';
 
 type EditServicePageProps = {
   params: Promise<{
@@ -63,6 +62,7 @@ export default async function EditServicePage({
     select: {
       id: true,
       name: true,
+      isActive: true,
     },
   });
 
@@ -99,8 +99,15 @@ export default async function EditServicePage({
       </div>
 
       {/* Main Form Section */}
-      <form
-        action={updateService.bind(null, service.id)}
+      {!categories.some((category) => category.isActive) && (
+        <div role="status" className="mt-6 rounded-xl border bg-card p-4 text-sm">
+          No active categories are currently available. <Link href="/providers/services" className="underline">Return to My Services</Link> to review your listings.
+        </div>
+      )}
+      <ActionForm
+        action={submitServiceUpdate.bind(null, service.id)}
+          fallbackAction={updateService.bind(null, service.id)}
+          failureMessage="We could not confirm your changes were saved. Check My Services before trying again."
         className="mt-8 space-y-6 rounded-2xl border bg-card p-6 shadow-sm transition-all hover:shadow-md sm:p-8"
       >
         {/* Category Dropdown */}
@@ -113,7 +120,7 @@ export default async function EditServicePage({
             <span>Category</span>
           </label>
 
-          <select
+          <FormSelect
             id="categoryId"
             name="categoryId"
             required
@@ -125,7 +132,8 @@ export default async function EditServicePage({
                 {category.name}
               </option>
             ))}
-          </select>
+          </FormSelect>
+              <FieldError name="categoryId" />
         </div>
 
         {/* Service Title */}
@@ -138,7 +146,7 @@ export default async function EditServicePage({
             <span>Service Title</span>
           </label>
 
-          <Input
+          <FormInput
             id="title"
             name="title"
             defaultValue={service.title}
@@ -146,6 +154,7 @@ export default async function EditServicePage({
             className="h-11 rounded-lg"
             required
           />
+              <FieldError name="title" />
         </div>
 
         {/* Description */}
@@ -154,7 +163,7 @@ export default async function EditServicePage({
             Description
           </label>
 
-          <Textarea
+          <FormTextarea
             id="description"
             name="description"
             defaultValue={service.description ?? ''}
@@ -174,7 +183,7 @@ export default async function EditServicePage({
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
               <IndianRupee className="h-4 w-4" />
             </div>
-            <Input
+            <FormInput
               id="price"
               name="price"
               type="number"
@@ -185,6 +194,7 @@ export default async function EditServicePage({
               className="h-11 rounded-lg pl-9"
               required
             />
+              <FieldError name="price" />
           </div>
         </div>
 
@@ -196,12 +206,12 @@ export default async function EditServicePage({
           >
             Cancel
           </Link>
-          <Button type="submit" size="lg" className="gap-2">
+          <SubmitButton pendingLabel="Saving changes…" disabled={categories.length === 0} type="submit" size="lg" className="gap-2">
             <Save className="h-4 w-4" />
             <span>Save Changes</span>
-          </Button>
+          </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </main>
   );
 }

@@ -9,14 +9,12 @@ import {
   MapPin,
   User,
   IndianRupee,
-  Clock,
   CheckCircle2,
-  XCircle,
-  AlertCircle,
   CalendarX2,
   ArrowRight,
 } from 'lucide-react';
 
+import { BookingStatusBadge } from '@/components/booking-status-badge';
 import { buttonVariants } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
@@ -27,54 +25,6 @@ function formatDate(date: Date) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(date));
-}
-
-// Status badge helper function with corresponding icons
-function renderStatusBadge(status: string) {
-  const normalizedStatus = status.toUpperCase();
-
-  switch (normalizedStatus) {
-    case 'PENDING':
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-600">
-          <Clock className="h-3.5 w-3.5" />
-          Pending
-        </span>
-      );
-
-    case 'ACCEPTED':
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600">
-          <AlertCircle className="h-3.5 w-3.5" />
-          Accepted
-        </span>
-      );
-
-    case 'COMPLETED':
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-600">
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Completed
-        </span>
-      );
-
-    case 'CANCELLED':
-    case 'REJECTED':
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-600">
-          <XCircle className="h-3.5 w-3.5" />
-
-          {normalizedStatus === 'CANCELLED' ? 'Cancelled' : 'Rejected'}
-        </span>
-      );
-
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-          {status}
-        </span>
-      );
-  }
 }
 
 export default async function MyBookingsPage() {
@@ -133,7 +83,7 @@ export default async function MyBookingsPage() {
             <h3 className="mt-4 text-lg font-bold">No bookings found</h3>
 
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              You haven't requested any service bookings yet. Explore our top
+              You haven&apos;t requested any service bookings yet. Explore our top
               providers to get started.
             </p>
 
@@ -152,11 +102,11 @@ export default async function MyBookingsPage() {
             {bookings.map((booking) => (
               <div
                 key={booking.id}
-                className="overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition-all hover:shadow-md sm:p-6"
+                className="min-w-0 [overflow-wrap:anywhere] rounded-2xl border bg-card p-5 shadow-sm transition-all hover:shadow-md sm:p-6"
               >
                 {/* Header Info & Status */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Service Booking
                     </span>
@@ -166,18 +116,18 @@ export default async function MyBookingsPage() {
                     </h2>
 
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
-                      <User className="h-3.5 w-3.5" />
+                      <User className="h-3.5 w-3.5 shrink-0" />
 
                       <span>
                         Provider:{' '}
                         <strong className="font-semibold text-foreground">
-                          {booking.provider.user.name}
+                          {booking.provider.user.name?.trim() || booking.provider.user.email?.trim() || 'Provider'}
                         </strong>
                       </span>
                     </div>
                   </div>
 
-                  <div>{renderStatusBadge(booking.status)}</div>
+                  <BookingStatusBadge status={booking.status} />
                 </div>
 
                 {/* Details Grid */}
@@ -217,9 +167,9 @@ export default async function MyBookingsPage() {
                       {booking.address.label}
                     </p>
 
-                    <p className="line-clamp-1 text-xs text-muted-foreground">
-                      {booking.address.addressLine}, {booking.address.city} -{' '}
-                      {booking.address.pincode}
+                    <p className="whitespace-pre-line text-xs text-muted-foreground">
+                      {[booking.address.addressLine, booking.address.city, booking.address.state, booking.address.pincode]
+                        .map((part) => part?.trim()).filter(Boolean).join(', ')}
                     </p>
                   </div>
                 </div>

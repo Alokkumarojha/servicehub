@@ -37,6 +37,7 @@ export default async function AdminDashboardPage() {
       label: 'Providers',
       value: providerCount,
       icon: BriefcaseBusiness,
+      href: '/admin/providers',
     },
     {
       label: 'Services',

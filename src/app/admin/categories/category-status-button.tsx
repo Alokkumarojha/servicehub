@@ -1,5 +1,7 @@
 'use client';
 
+import { unstable_rethrow } from 'next/navigation';
+
 import { useActionState, useEffect } from 'react';
 
 import { toast } from '@/components/ui/toast';
@@ -21,7 +23,16 @@ export default function CategoryStatusButton({
   isActive,
 }: CategoryStatusButtonProps) {
   const [state, formAction, pending] = useActionState(
-    toggleCategoryStatus,
+    async (previousState: typeof initialState, formData: FormData) => {
+      try {
+        const result = await toggleCategoryStatus(previousState, formData);
+
+        return result;
+      } catch (error) {
+        unstable_rethrow(error);
+        return { success: false, message: "Could not confirm the status change. Refresh the page before trying again." };
+      }
+    },
     initialState
   );
 
@@ -30,11 +41,12 @@ export default function CategoryStatusButton({
 
     toast.add({
       title: state.message,
+      type: state.success ? 'success' : 'error',
     });
   }, [state]);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} aria-busy={pending}>
       <input type="hidden" name="categoryId" value={categoryId} />
 
       <button
@@ -44,6 +56,7 @@ export default function CategoryStatusButton({
       >
         {pending ? 'Updating...' : isActive ? 'Deactivate' : 'Activate'}
       </button>
+      {state.message && !state.success && <p role="alert" className="mt-2 text-sm text-destructive">{state.message}</p>}
     </form>
   );
 }

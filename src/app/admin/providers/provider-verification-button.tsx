@@ -1,5 +1,7 @@
 'use client';
 
+import { unstable_rethrow } from 'next/navigation';
+
 import { useActionState, useEffect } from 'react';
 
 import { toast } from '@/components/ui/toast';
@@ -24,7 +26,16 @@ export default function ProviderVerificationButton({
   isVerified,
 }: ProviderVerificationButtonProps) {
   const [state, formAction, pending] = useActionState(
-    toggleProviderVerification,
+    async (previousState: typeof initialState, formData: FormData) => {
+      try {
+        const result = await toggleProviderVerification(previousState, formData);
+
+        return result;
+      } catch (error) {
+        unstable_rethrow(error);
+        return { success: false, message: "Could not confirm verification was updated. Refresh the page before trying again." };
+      }
+    },
     initialState
   );
 
@@ -33,11 +44,12 @@ export default function ProviderVerificationButton({
 
     toast.add({
       title: state.message,
+      type: state.success ? 'success' : 'error',
     });
   }, [state]);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} aria-busy={pending}>
       <input type="hidden" name="providerId" value={providerId} />
 
       <button
@@ -47,6 +59,7 @@ export default function ProviderVerificationButton({
       >
         {pending ? 'Updating...' : isVerified ? 'Unverify' : 'Verify'}
       </button>
+      {state.message && !state.success && <p role="alert" className="mt-2 text-sm text-destructive">{state.message}</p>}
     </form>
   );
 }

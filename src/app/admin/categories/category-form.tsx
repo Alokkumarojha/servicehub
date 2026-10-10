@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { unstable_rethrow } from 'next/navigation';
+
+import { useActionState, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
 
@@ -12,8 +14,18 @@ const initialState: CategoryFormState = {
 };
 
 export default function CategoryForm() {
+  const [nameValue, setName] = useState('');
   const [state, formAction, pending] = useActionState(
-    createCategory,
+    async (previousState: typeof initialState, formData: FormData) => {
+      try {
+        const result = await createCategory(previousState, formData);
+        if (result.success) setName('');
+        return result;
+      } catch (error) {
+        unstable_rethrow(error);
+        return { success: false, message: "Could not confirm the category was added. Check the list before trying again." };
+      }
+    },
     initialState
   );
   useEffect(() => {
@@ -21,12 +33,14 @@ export default function CategoryForm() {
 
     toast.add({
       title: state.message,
+      type: state.success ? 'success' : 'error',
     });
   }, [state]);
 
   return (
     <form
       action={formAction}
+      aria-busy={pending}
       className="mb-6 rounded-2xl border bg-card p-5 shadow-sm"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -39,6 +53,11 @@ export default function CategoryForm() {
             id="name"
             name="name"
             type="text"
+            value={nameValue}
+            onChange={(event) => setName(event.target.value)}
+            disabled={pending}
+            aria-invalid={Boolean(state.message && !state.success)}
+            aria-describedby={state.message ? "category-feedback" : undefined}
             required
             placeholder="e.g. Home Cleaning"
             className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -57,7 +76,7 @@ export default function CategoryForm() {
       </div>
 
       {state.message && (
-        <p
+        <p id="category-feedback" role={state.success ? "status" : "alert"}
           className={`mt-3 text-sm ${
             state.success ? 'text-green-600' : 'text-destructive'
           }`}

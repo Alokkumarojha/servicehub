@@ -1,5 +1,7 @@
 'use client';
 
+import { unstable_rethrow } from 'next/navigation';
+
 import { useActionState, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 
@@ -32,24 +34,33 @@ export function DeleteCategoryButton({
   categoryId,
   categoryName,
 }: DeleteCategoryButtonProps) {
+  const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
-    deleteCategory,
+    async (previousState: typeof initialState, formData: FormData) => {
+      try {
+        const result = await deleteCategory(previousState, formData);
+        if (result.success) setOpen(false);
+        return result;
+      } catch (error) {
+        unstable_rethrow(error);
+        return { success: false, message: "Could not confirm deletion. Refresh the list before trying again." };
+      }
+    },
     initialState
   );
-  const [open, setOpen] = useState(false);
+
 
   useEffect(() => {
     if (!state.message) return;
 
-    setOpen(false);
-
     toast.add({
       title: state.message,
+      type: state.success ? 'success' : 'error',
     });
   }, [state]);
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={(nextOpen) => { if (!pending) setOpen(nextOpen); }}>
       <AlertDialogTrigger
         render={<Button type="button" variant="destructive" size="sm" />}
       >
@@ -67,13 +78,14 @@ export function DeleteCategoryButton({
           </AlertDialogDescription>
         </AlertDialogHeader>
 
+        {state.message && !state.success && <p role="alert" className="text-sm text-destructive">{state.message}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
 
-          <form action={formAction}>
+          <form action={formAction} aria-busy={pending}>
             <input type="hidden" name="categoryId" value={categoryId} />
 
-            <AlertDialogAction type="submit" disabled={pending}>
+            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
               {pending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </form>

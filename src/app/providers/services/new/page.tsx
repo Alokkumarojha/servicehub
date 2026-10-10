@@ -7,13 +7,12 @@ import {
   Plus,
 } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { buttonVariants } from '@/components/ui/button';
+import { ActionForm, FormTextarea, FormInput, FormSelect, FieldError, SubmitButton } from '@/components/action-form';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
 
-import { createService } from './actions';
+import { createService, submitService } from './actions';
 
 export default async function NewServicePage() {
   const user = await getCurrentUser();
@@ -94,8 +93,15 @@ export default async function NewServicePage() {
 
       {/* Form Area */}
       <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <form
-          action={createService}
+        {!categories.some((category) => category.isActive) && (
+          <div role="status" className="mb-6 rounded-xl border bg-card p-4 text-sm">
+            No active categories are currently available. <Link href="/providers/services" className="underline">Return to My Services</Link> to review your listings.
+          </div>
+        )}
+        <ActionForm
+          action={submitService}
+          fallbackAction={createService}
+          failureMessage="We could not confirm the service was created. Check My Services before trying again."
           className="overflow-hidden rounded-2xl border bg-card shadow-sm"
         >
           {/* Form Header */}
@@ -117,7 +123,7 @@ export default async function NewServicePage() {
                 <span className="ml-1 text-destructive">*</span>
               </label>
 
-              <select
+              <FormSelect
                 id="categoryId"
                 name="categoryId"
                 required
@@ -133,7 +139,8 @@ export default async function NewServicePage() {
                     {category.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
+              <FieldError name="categoryId" />
 
               <p className="text-xs text-muted-foreground">
                 Choose the category that best matches your service.
@@ -147,13 +154,14 @@ export default async function NewServicePage() {
                 <span className="ml-1 text-destructive">*</span>
               </label>
 
-              <Input
+              <FormInput
                 id="title"
                 name="title"
                 placeholder="Example: Ceiling Fan Installation"
                 className="h-11"
                 required
               />
+              <FieldError name="title" />
 
               <p className="text-xs text-muted-foreground">
                 Use a short and clear title that tells customers what you do.
@@ -166,7 +174,7 @@ export default async function NewServicePage() {
                 Service Description
               </label>
 
-              <Textarea
+              <FormTextarea
                 id="description"
                 name="description"
                 placeholder="Describe the work included in this service, what customers can expect, and any important details..."
@@ -194,7 +202,7 @@ export default async function NewServicePage() {
               <div className="relative max-w-sm">
                 <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-                <Input
+                <FormInput
                   id="price"
                   name="price"
                   type="number"
@@ -204,6 +212,7 @@ export default async function NewServicePage() {
                   className="h-11 pl-9"
                   required
                 />
+              <FieldError name="price" />
               </div>
 
               <p className="text-xs text-muted-foreground">
@@ -224,12 +233,12 @@ export default async function NewServicePage() {
               Cancel
             </Link>
 
-            <Button type="submit" size="lg" className="gap-2">
+            <SubmitButton pendingLabel="Creating service…" disabled={categories.length === 0} type="submit" size="lg" className="gap-2">
               <Plus className="h-4 w-4" />
               Create Service
-            </Button>
+            </SubmitButton>
           </div>
-        </form>
+        </ActionForm>
       </section>
     </main>
   );

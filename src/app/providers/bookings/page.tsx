@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { BookingStatusBadge } from '@/components/booking-status-badge';
 import { BookingActions } from './booking-actions';
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
@@ -65,7 +66,7 @@ export default async function ProviderBookingsPage() {
                 className="min-w-0 rounded-xl border bg-card p-5 shadow-sm [overflow-wrap:anywhere] sm:p-6"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Service Request
                     </p>
@@ -75,9 +76,7 @@ export default async function ProviderBookingsPage() {
                     </h2>
                   </div>
 
-                  <span className="w-fit shrink-0 rounded-full border bg-muted px-3 py-1 text-xs font-semibold">
-                    {booking.status.charAt(0) + booking.status.slice(1).toLowerCase()}
-                  </span>
+                  <BookingStatusBadge status={booking.status} />
                 </div>
 
                 <div className="mt-4 rounded-lg bg-muted/50 p-3">
@@ -118,8 +117,9 @@ export default async function ProviderBookingsPage() {
 
                     <p className="mt-1 font-medium">{booking.address.label}</p>
 
-                    <p className="text-xs text-muted-foreground">
-                      {booking.address.addressLine}, {booking.address.city}
+                    <p className="whitespace-pre-line text-xs text-muted-foreground">
+                      {[booking.address.addressLine, booking.address.city, booking.address.state, booking.address.pincode]
+                        .map((part) => part?.trim()).filter(Boolean).join(', ')}
                     </p>
                   </div>
                 </div>

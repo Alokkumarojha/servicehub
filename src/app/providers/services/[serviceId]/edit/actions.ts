@@ -1,9 +1,10 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 
 import { getCurrentUser } from '@/lib/auth-user';
 import { prisma } from '@/lib/prisma';
+import type { FormFeedback } from '@/components/action-form';
 
 export async function updateService(serviceId: string, formData: FormData) {
   const categoryId = formData.get('categoryId');
@@ -79,4 +80,46 @@ export async function updateService(serviceId: string, formData: FormData) {
   }
 
   redirect('/providers/services');
+}
+
+// Presentation adapter: the original action and its business rules stay unchanged.
+export async function submitServiceUpdate(serviceId: string, formData: FormData): Promise<FormFeedback> {
+  try {
+    await updateService(serviceId, formData);
+  } catch (error) {
+    unstable_rethrow(error);
+    const messages: Record<string, [string, string]> = {
+  "Required service details are missing.": [
+    "",
+    "Please fill in the required service details."
+  ],
+  "Service title is required.": [
+    "title",
+    "Enter a service title."
+  ],
+  "Please enter a valid service price.": [
+    "price",
+    "Enter a price greater than zero."
+  ],
+  "Selected category not found.": [
+    "categoryId",
+    "This category is no longer available. Reload to see current categories."
+  ],
+  "Provider profile not found.": [
+    "",
+    "A provider profile is required. Return to My Services to continue."
+  ],
+  "Service not found or you do not have permission to edit it.": [
+    "",
+    "This service cannot be edited from your account. Return to My Services."
+  ]
+};
+    const expected = error instanceof Error && Object.hasOwn(messages, error.message) ? messages[error.message] : undefined;
+    if (expected) {
+      const [field, message] = expected;
+      return { message, fieldErrors: field ? { [field]: message } : undefined };
+    }
+    return { message: "We could not confirm your changes were saved. Check My Services before trying again." };
+  }
+  return { message: "We could not confirm your changes were saved. Check My Services before trying again." };
 }
