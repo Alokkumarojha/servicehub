@@ -48,9 +48,10 @@ export async function createProviderProfile(formData: FormData) {
       },
     }),
 
-    prisma.user.update({
+    prisma.user.updateMany({
       where: {
         id: user.id,
+        role: 'CUSTOMER',
       },
       data: {
         role: 'PROVIDER',
